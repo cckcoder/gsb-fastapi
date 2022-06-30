@@ -1,5 +1,4 @@
-from fastapi import FastAPI 
-from datetime import datetime
+from fastapi import FastAPI, HTTPException, status
 
 
 app = FastAPI()
@@ -35,4 +34,7 @@ def coffee_list(price: int|None = None, status:str|None = None) -> list:
 @app.get("/api/coffee/{id}")
 def coffee_by_id(id: int) -> dict:
     result = [c for c in coffee_db if c["id"] == id] 
-    return result[0]
+    if result:
+        return result[0]
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id: {id}")
