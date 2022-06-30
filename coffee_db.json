@@ -1,0 +1,10 @@
+[
+    {"id": 1, "name": "espresso","price": 49, "status": "a"},
+    {"id": 2, "name": "americano","price": 59, "status": "n"},
+    {"id": 3, "name": "latte","price": 59, "status": "a"},
+    {"id": 4, "name": "mocha","price": 59, "status": "a"},
+    {"id": 5, "name": "cappuccino","price": 59, "status": "a"},
+    {"id": 6, "name": "cold brew","price": 69, "status": "a"},
+    {"id": 7, "name": "green tea","price": 49, "status": "n"},
+    {"id": 8, "name": "chocolate","price": 49, "status": "n"}
+]
