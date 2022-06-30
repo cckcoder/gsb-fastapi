@@ -30,3 +30,9 @@ def coffee_list(price: int|None = None, status:str|None = None) -> list:
         result = [c for c in result if c["status"] == status]
 
     return result
+
+
+@app.get("/api/coffee/{id}")
+def coffee_by_id(id: int) -> dict:
+    result = [c for c in coffee_db if c["id"] == id] 
+    return result[0]
