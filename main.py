@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, status
-from schemas import load_db
+from schemas import CoffeeOutput, CoffeeInput, load_db, save_db
 
 app = FastAPI()
 coffee_db = load_db()
@@ -31,3 +31,15 @@ def coffee_by_id(id: int) -> dict:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id: {id}"
         )
+
+
+@app.post("/api/coffee")
+def add_coffee(coffee: CoffeeInput) -> CoffeeOutput:
+    id = len(coffee_db) + 1
+    new_coffee = CoffeeOutput(
+        id=id, name=coffee.name, price=coffee.price, status=coffee.status
+    )
+
+    coffee_db.append(new_coffee)
+    save_db(coffee_db)
+    return new_coffee
