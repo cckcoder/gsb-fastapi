@@ -6,7 +6,10 @@
 * [Postman](https://www.postman.com/downloads/)
 
 ## Cli in use
+* `uvicorn main:app --reload`
 
+## libraries in use
+* `pip install "fastapi[all]"`
 
 
 ## Ref
