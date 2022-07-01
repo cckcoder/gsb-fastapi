@@ -33,7 +33,7 @@ def coffee_by_id(id: int) -> dict:
         )
 
 
-@app.post("/api/coffee")
+@app.post("/api/coffee", response_model=CoffeeOutput)
 def add_coffee(coffee: CoffeeInput) -> CoffeeOutput:
     id = len(coffee_db) + 1
     new_coffee = CoffeeOutput(
