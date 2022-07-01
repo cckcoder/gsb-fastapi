@@ -5,6 +5,12 @@
 * [python](https://www.python.org/downloads/)
 * [Postman](https://www.postman.com/downloads/)
 
+## Python ENV
+* config python env
+    `python -m venv env`
+* Activate env
+    `.\env\Scripts\activate`
+    
 ## Cli in use
 * For create python env `python3 -m venv env`
 * `uvicorn main:app --reload`
@@ -16,6 +22,7 @@
 * `pip install "passlib[bcrypt]"`
 * `pip install python-decouple`
 * `pip install pytest`
+* gen secret-key `openssl rand -hex 32`
 
 
 ## Ref
