@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from schemas import CoffeeOutput, CoffeeInput, ReviewInput, ReviewOutput, load_db, save_db
 
-app = FastAPI()
+app = FastAPI(title="PyCoffee")
 coffee_db = load_db()
 
 
