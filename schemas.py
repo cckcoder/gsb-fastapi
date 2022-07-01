@@ -7,6 +7,15 @@ class CoffeeInput(BaseModel):
     price: int
     status: str | None = "a"
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "espresso",
+                "price": 49,
+                "status": "a",
+            }
+        }
+
 
 class CoffeeOutput(CoffeeInput):
     id: int
