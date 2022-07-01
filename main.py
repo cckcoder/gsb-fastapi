@@ -3,10 +3,10 @@ from sqlmodel import create_engine, SQLModel, Session, select
 
 from schemas import (
     Coffee,
-    CoffeeOutput,
     CoffeeInput,
+    CoffeeOutput,
+    Review,
     ReviewInput,
-    ReviewOutput,
 )
 
 app = FastAPI(title="PyCoffee")
@@ -42,11 +42,11 @@ def coffee_list(
         query = query.where(Coffee.price >= price)
 
     if status:
-        query = query.where(Coffee.status == price)
+        query = query.where(Coffee.status == status)
     return db.exec(query).all()
 
 
-@app.get("/api/coffee/{id}")
+@app.get("/api/coffee/{id}", response_model=CoffeeOutput)
 def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
     coffee = db.get(Coffee, id)
     if coffee:
@@ -96,14 +96,16 @@ def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
         )
 
 
-@app.post("/api/coffee/{coffee_id}/reviews", response_model=ReviewOutput)
-def add_review(coffee_id: int, reviews: ReviewInput) -> ReviewOutput:
-    match = [c for c in coffee_db if c.id == coffee_id]
-    if match:
-        coffee = match[0]
-        new_review = ReviewOutput(id=len(coffee.reviews) + 1, **reviews.dict())
+@app.post("/api/coffee/{coffee_id}/reviews", response_model=Review)
+def add_review(
+    coffee_id: int, review: ReviewInput, db: Session = Depends(get_session)
+) -> Review:
+    coffee = db.get(Coffee, coffee_id)
+    if coffee:
+        new_review = Review.from_orm(review, update={"coffee_id": coffee_id})
         coffee.reviews.append(new_review)
-        save_db(coffee_db)
+        db.commit()
+        db.refresh(new_review)
         return new_review
     else:
         raise HTTPException(

@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 
 class ReviewInput(SQLModel):
@@ -8,6 +8,12 @@ class ReviewInput(SQLModel):
 
 class ReviewOutput(ReviewInput):
     id: int
+
+
+class Review(ReviewInput, table=True):
+    id: int | None = Field(primary_key=True, default=None)
+    coffee_id: int = Field(foreign_key="coffee.id")
+    coffee: "Coffee" = Relationship(back_populates="reviews")
 
 
 class CoffeeInput(SQLModel):
@@ -27,6 +33,7 @@ class CoffeeInput(SQLModel):
 
 class Coffee(CoffeeInput, table=True):
     id: int | None = Field(primary_key=True, default=None)
+    reviews: list[Review] = Relationship(back_populates="coffee")
 
 
 class CoffeeOutput(CoffeeInput):
