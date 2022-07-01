@@ -4,12 +4,13 @@ from fastapi.responses import JSONResponse
 
 from sqlmodel import SQLModel
 from database.db_connect import engine
-from routers import coffee
-from utils.helper_exception import NotFoundException
+from routers import coffee, auth
+from utils.helper_exception import NotFoundException, UnauthorizeException
 
 
 app = FastAPI(title="PyCoffee")
 app.include_router(coffee.router)
+app.include_router(auth.router)
 
 origins = ["http://localhost:8000"]
 
@@ -32,6 +33,14 @@ async def excepition_404_handler(req: Request, exc: NotFoundException):
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={"message": "Not found available coffee id"},
+    )
+
+
+@app.exception_handler(UnauthorizeException)
+async def excepition_404_handler(req: Request, exc: UnauthorizeException):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"message": "Invalid credential"},
     )
 
 

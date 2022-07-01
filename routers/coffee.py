@@ -11,9 +11,10 @@ from schemas import (
     ReviewInput,
 )
 from utils.helper_exception import NotFoundException
+from utils.oauth2 import access_user_token
 
 
-router = APIRouter(prefix="/api/coffee", tags=["coffee"])
+router = APIRouter(prefix="/api/coffee", tags=["coffee"], dependencies=[Depends(access_user_token)])
 
 
 @router.get("/api/coffee")

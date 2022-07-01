@@ -11,6 +11,9 @@
 ## libraries in use
 * `pip install "fastapi[all]"`
 * `pip install sqlmodel`
+* `pip install "python-jose[cryptography]"`
+* `pip install "passlib[bcrypt]"`
+* `pip install python-decouple`
 
 
 ## Ref
