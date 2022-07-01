@@ -59,3 +59,16 @@ def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
         )
+
+
+@app.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_coffee(id: int) -> None:
+    match = [c for c in coffee_db if c.id == id]
+    if match:
+        coffee = match[0]
+        coffee_db.remove(coffee)
+        save_db(coffee_db)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
+        )
