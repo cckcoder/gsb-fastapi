@@ -1,4 +1,6 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column, VARCHAR
+from passlib.context import CryptContext
+from pydantic import BaseModel
 
 
 class ReviewInput(SQLModel):
@@ -41,11 +43,28 @@ class CoffeeOutput(CoffeeInput):
     reviews: list[ReviewOutput] = []
 
 
-# def load_db() -> list[CoffeeOutput]:
-# with open("coffee_db.json") as f:
-# return [CoffeeOutput.parse_obj(obj) for obj in json.load(f)]
-#
-#
-# def save_db(coffee_db: list[CoffeeOutput]):
-# with open("coffee_db.json", "w") as f:
-# json.dump([coffee.dict() for coffee in coffee_db], f, indent=4)
+pwd_context = CryptContext(schemes=["bcrypt"])
+
+
+class UserOutput(SQLModel):
+    id: int
+    username: str
+
+
+class User(SQLModel, table=True):
+    id: int | None = Field(primary_key=True, default=None)
+    username: str = Field(
+        sa_column=Column("username", VARCHAR, unique=True, index=True)
+    )
+    password_hash: str = ""
+
+    def set_password(self, password):
+        self.password_hash = pwd_context.hash(password)
+
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password_hash)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
