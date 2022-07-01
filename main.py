@@ -1,8 +1,24 @@
 from fastapi import FastAPI, HTTPException, status
-from schemas import CoffeeOutput, CoffeeInput, ReviewInput, ReviewOutput, load_db, save_db
+from sqlmodel import create_engine, SQLModel, Session, select
+
+from schemas import (
+    Coffee,
+    CoffeeOutput,
+    CoffeeInput,
+    ReviewInput,
+    ReviewOutput,
+)
 
 app = FastAPI(title="PyCoffee")
-coffee_db = load_db()
+
+engine = create_engine(
+    "sqlite:///coffee.db", connect_args={"check_same_thread": False}, echo=True
+)
+
+
+@app.on_event("startup")
+def on_startup():
+    SQLModel.metadata.create_all(engine)
 
 
 @app.get("/")
@@ -12,14 +28,15 @@ def welcome():
 
 @app.get("/api/coffee")
 def coffee_list(price: int | None = None, status: str | None = None) -> list:
-    result = coffee_db
-    if price:
-        result = [c for c in result if c.price >= price]
+    with Session(engine) as session:
+        query = select(Coffee)
+        if price:
+            #query = [c for c in result if c.price >= price]
+            query = query.where(Coffee.price >= price)
 
-    if status:
-        result = [c for c in result if c.status == status]
-
-    return result
+        if status:
+            query = query.where(Coffee.status == price)
+        return session.exec(query).all()
 
 
 @app.get("/api/coffee/{id}")
@@ -33,16 +50,14 @@ def coffee_by_id(id: int) -> dict:
         )
 
 
-@app.post("/api/coffee", response_model=CoffeeOutput)
-def add_coffee(coffee: CoffeeInput) -> CoffeeOutput:
-    id = len(coffee_db) + 1
-    new_coffee = CoffeeOutput(
-        id=id, name=coffee.name, price=coffee.price, status=coffee.status
-    )
-
-    coffee_db.append(new_coffee)
-    save_db(coffee_db)
-    return new_coffee
+@app.post("/api/coffee", response_model=Coffee)
+def add_coffee(coffee: CoffeeInput) -> Coffee:
+    with Session(engine) as session:
+        new_coffee = Coffee.from_orm(coffee)
+        session.add(new_coffee)
+        session.commit()
+        session.refresh(new_coffee)
+        return new_coffee
 
 
 @app.put("/api/coffee/{id}", response_model=CoffeeOutput)
@@ -75,7 +90,7 @@ def remove_coffee(id: int) -> None:
 
 
 @app.post("/api/coffee/{coffee_id}/reviews", response_model=ReviewOutput)
-def add_review(coffee_id:int, reviews: ReviewInput) -> ReviewOutput:
+def add_review(coffee_id: int, reviews: ReviewInput) -> ReviewOutput:
     match = [c for c in coffee_db if c.id == coffee_id]
     if match:
         coffee = match[0]
