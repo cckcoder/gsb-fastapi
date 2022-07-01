@@ -1,8 +1,29 @@
-from fastapi import FastAPI, HTTPException, status
-from schemas import CoffeeOutput, CoffeeInput, ReviewInput, ReviewOutput, load_db, save_db
+from fastapi import FastAPI, HTTPException, status, Depends
+from sqlmodel import create_engine, SQLModel, Session, select
 
-app = FastAPI()
-coffee_db = load_db()
+from schemas import (
+    Coffee,
+    CoffeeInput,
+    CoffeeOutput,
+    Review,
+    ReviewInput,
+)
+
+app = FastAPI(title="PyCoffee")
+
+engine = create_engine(
+    "sqlite:///coffee.db", connect_args={"check_same_thread": False}, echo=True
+)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+@app.on_event("startup")
+def on_startup():
+    SQLModel.metadata.create_all(engine)
 
 
 @app.get("/")
@@ -11,49 +32,51 @@ def welcome():
 
 
 @app.get("/api/coffee")
-def coffee_list(price: int | None = None, status: str | None = None) -> list:
-    result = coffee_db
+def coffee_list(
+    price: int | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_session),
+) -> list:
+    query = select(Coffee)
     if price:
-        result = [c for c in result if c.price >= price]
+        query = query.where(Coffee.price >= price)
 
     if status:
-        result = [c for c in result if c.status == status]
+        query = query.where(Coffee.status == status)
+    return db.exec(query).all()
 
-    return result
 
-
-@app.get("/api/coffee/{id}")
-def coffee_by_id(id: int) -> dict:
-    result = [c for c in coffee_db if c.id == id]
-    if result:
-        return result[0]
+@app.get("/api/coffee/{id}", response_model=CoffeeOutput)
+def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
+    coffee = db.get(Coffee, id)
+    if coffee:
+        return coffee
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id: {id}"
         )
 
 
-@app.post("/api/coffee", response_model=CoffeeOutput)
-def add_coffee(coffee: CoffeeInput) -> CoffeeOutput:
-    id = len(coffee_db) + 1
-    new_coffee = CoffeeOutput(
-        id=id, name=coffee.name, price=coffee.price, status=coffee.status
-    )
-
-    coffee_db.append(new_coffee)
-    save_db(coffee_db)
-    return new_coffee
+@app.post("/api/coffee", response_model=Coffee)
+def add_coffee(coffee: CoffeeInput) -> Coffee:
+    with Session(engine) as session:
+        new_coffee = Coffee.from_orm(coffee)
+        session.add(new_coffee)
+        session.commit()
+        session.refresh(new_coffee)
+        return new_coffee
 
 
-@app.put("/api/coffee/{id}", response_model=CoffeeOutput)
-def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
-    match = [c for c in coffee_db if c.id == id]
-    if match:
-        coffee = match[0]
+@app.put("/api/coffee/{id}", response_model=Coffee)
+def update_coffee(
+    id: int, new_coffee: CoffeeInput, db: Session = Depends(get_session)
+) -> Coffee:
+    coffee = db.get(Coffee, id)
+    if coffee:
         coffee.name = new_coffee.name
         coffee.price = new_coffee.price
         coffee.status = new_coffee.status
-        save_db(coffee_db)
+        db.commit()
         return coffee
     else:
         raise HTTPException(
@@ -62,26 +85,27 @@ def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
 
 
 @app.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_coffee(id: int) -> None:
-    match = [c for c in coffee_db if c.id == id]
-    if match:
-        coffee = match[0]
-        coffee_db.remove(coffee)
-        save_db(coffee_db)
+def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
+    coffee = db.get(Coffee, id)
+    if coffee:
+        db.delete(coffee)
+        db.commit()
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
         )
 
 
-@app.post("/api/coffee/{coffee_id}/reviews", response_model=ReviewOutput)
-def add_review(coffee_id:int, reviews: ReviewInput) -> ReviewOutput:
-    match = [c for c in coffee_db if c.id == coffee_id]
-    if match:
-        coffee = match[0]
-        new_review = ReviewOutput(id=len(coffee.reviews) + 1, **reviews.dict())
+@app.post("/api/coffee/{coffee_id}/reviews", response_model=Review)
+def add_review(
+    coffee_id: int, review: ReviewInput, db: Session = Depends(get_session)
+) -> Review:
+    coffee = db.get(Coffee, coffee_id)
+    if coffee:
+        new_review = Review.from_orm(review, update={"coffee_id": coffee_id})
         coffee.reviews.append(new_review)
-        save_db(coffee_db)
+        db.commit()
+        db.refresh(new_review)
         return new_review
     else:
         raise HTTPException(
