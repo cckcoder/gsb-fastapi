@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from sqlmodel import create_engine, SQLModel, Session, select
 
 from schemas import (
@@ -16,6 +16,11 @@ engine = create_engine(
 )
 
 
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
@@ -27,23 +32,25 @@ def welcome():
 
 
 @app.get("/api/coffee")
-def coffee_list(price: int | None = None, status: str | None = None) -> list:
-    with Session(engine) as session:
-        query = select(Coffee)
-        if price:
-            #query = [c for c in result if c.price >= price]
-            query = query.where(Coffee.price >= price)
+def coffee_list(
+    price: int | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_session),
+) -> list:
+    query = select(Coffee)
+    if price:
+        query = query.where(Coffee.price >= price)
 
-        if status:
-            query = query.where(Coffee.status == price)
-        return session.exec(query).all()
+    if status:
+        query = query.where(Coffee.status == price)
+    return db.exec(query).all()
 
 
 @app.get("/api/coffee/{id}")
-def coffee_by_id(id: int) -> dict:
-    result = [c for c in coffee_db if c.id == id]
-    if result:
-        return result[0]
+def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
+    coffee = db.get(Coffee, id)
+    if coffee:
+        return coffee
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id: {id}"
@@ -60,15 +67,16 @@ def add_coffee(coffee: CoffeeInput) -> Coffee:
         return new_coffee
 
 
-@app.put("/api/coffee/{id}", response_model=CoffeeOutput)
-def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
-    match = [c for c in coffee_db if c.id == id]
-    if match:
-        coffee = match[0]
+@app.put("/api/coffee/{id}", response_model=Coffee)
+def update_coffee(
+    id: int, new_coffee: CoffeeInput, db: Session = Depends(get_session)
+) -> Coffee:
+    coffee = db.get(Coffee, id)
+    if coffee:
         coffee.name = new_coffee.name
         coffee.price = new_coffee.price
         coffee.status = new_coffee.status
-        save_db(coffee_db)
+        db.commit()
         return coffee
     else:
         raise HTTPException(
@@ -77,12 +85,11 @@ def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
 
 
 @app.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_coffee(id: int) -> None:
-    match = [c for c in coffee_db if c.id == id]
-    if match:
-        coffee = match[0]
-        coffee_db.remove(coffee)
-        save_db(coffee_db)
+def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
+    coffee = db.get(Coffee, id)
+    if coffee:
+        db.delete(coffee)
+        db.commit()
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
