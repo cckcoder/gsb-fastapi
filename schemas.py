@@ -1,16 +1,41 @@
-import json 
-from pydantic import BaseModel 
+import json
+from pydantic import BaseModel
 
 
-class Coffee(BaseModel):
+class ReviewInput(BaseModel):
+    star: int
+    comment: str
+
+
+class ReviewOutput(ReviewInput):
     id: int
+
+
+class CoffeeInput(BaseModel):
     name: str
     price: int
     status: str | None = "a"
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "espresso",
+                "price": 49,
+                "status": "a",
+            }
+        }
 
-def load_db() -> list[Coffee]:
+
+class CoffeeOutput(CoffeeInput):
+    id: int
+    reviews: list[ReviewInput] = []
+
+
+def load_db() -> list[CoffeeOutput]:
     with open("coffee_db.json") as f:
-        return [Coffee.parse_obj(obj) for obj in json.load(f)]
+        return [CoffeeOutput.parse_obj(obj) for obj in json.load(f)]
 
 
+def save_db(coffee_db: list[CoffeeOutput]):
+    with open("coffee_db.json", "w") as f:
+        json.dump([coffee.dict() for coffee in coffee_db], f, indent=4)
