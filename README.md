@@ -28,5 +28,7 @@
 
 ## Note
 > Use SQLAlchemy==1.4.34
+
 > windows update pip `python -m pip install --upgrade pip`
+
 > fix windows permission put this in powershell `Set-ExecutionPolicy RemoteSigned`
