@@ -14,7 +14,9 @@ from utils.helper_exception import NotFoundException
 from utils.oauth2 import access_user_token
 
 
-router = APIRouter(prefix="/api/coffee", tags=["coffee"], dependencies=[Depends(access_user_token)])
+router = APIRouter(
+    prefix="/api/coffee", tags=["coffee"], dependencies=[Depends(access_user_token)]
+)
 
 
 @router.get("/api/coffee")
@@ -42,13 +44,12 @@ def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
 
 
 @router.post("/api/coffee", response_model=Coffee)
-def add_coffee(coffee: CoffeeInput) -> Coffee:
-    with Session(engine) as session:
-        new_coffee = Coffee.from_orm(coffee)
-        session.add(new_coffee)
-        session.commit()
-        session.refresh(new_coffee)
-        return new_coffee
+def add_coffee(coffee: CoffeeInput, db: Session = Depends(get_session)) -> Coffee:
+    new_coffee = Coffee.from_orm(coffee)
+    db.add(new_coffee)
+    db.commit()
+    db.refresh(new_coffee)
+    return new_coffee
 
 
 @router.put("/api/coffee/{id}", response_model=Coffee)
@@ -63,7 +64,10 @@ def update_coffee(
         db.commit()
         return coffee
     else:
-        raise NotFoundException()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"coffee id {id} not available",
+        )
 
 
 @router.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -73,7 +77,10 @@ def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
         db.delete(coffee)
         db.commit()
     else:
-        raise NotFoundException()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"coffee id {id} not available",
+        )
 
 
 @router.post("/api/coffee/{coffee_id}/reviews", response_model=Review)
@@ -88,4 +95,7 @@ def add_review(
         db.refresh(new_review)
         return new_review
     else:
-        raise NotFoundException()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"coffee id {id} not available",
+        )

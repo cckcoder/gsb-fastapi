@@ -6,6 +6,7 @@
 * [Postman](https://www.postman.com/downloads/)
 
 ## Cli in use
+* For create python env `python3 -m venv env`
 * `uvicorn main:app --reload`
 
 ## libraries in use
