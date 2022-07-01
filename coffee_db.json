@@ -3,54 +3,69 @@
         "name": "espresso",
         "price": 49,
         "status": "a",
-        "id": 1
+        "id": 1,
+        "reviews": []
     },
     {
         "name": "americano",
         "price": 59,
         "status": "n",
-        "id": 2
+        "id": 2,
+        "reviews": []
     },
     {
         "name": "latte",
         "price": 59,
         "status": "a",
-        "id": 3
+        "id": 3,
+        "reviews": []
     },
     {
         "name": "mocha",
         "price": 59,
         "status": "a",
-        "id": 4
+        "id": 4,
+        "reviews": []
     },
     {
         "name": "cappuccino",
         "price": 59,
         "status": "a",
-        "id": 5
+        "id": 5,
+        "reviews": []
     },
     {
         "name": "cold brew",
         "price": 69,
         "status": "a",
-        "id": 6
+        "id": 6,
+        "reviews": []
     },
     {
         "name": "green tea",
         "price": 49,
         "status": "n",
-        "id": 7
+        "id": 7,
+        "reviews": []
     },
     {
         "name": "chocolate",
         "price": 49,
         "status": "n",
-        "id": 8
+        "id": 8,
+        "reviews": []
     },
     {
         "name": "Matcha fusion espresso",
         "price": 99,
         "status": "a",
-        "id": 9
+        "id": 9,
+        "reviews": [
+            {
+                "star": 5,
+                "comment": "This's my favorite thing, awesome!!",
+                "id": 1
+            }
+        ]
     }
 ]

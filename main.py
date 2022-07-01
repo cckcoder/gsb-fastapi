@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, status
-from schemas import CoffeeOutput, CoffeeInput, load_db, save_db
+from schemas import CoffeeOutput, CoffeeInput, ReviewInput, ReviewOutput, load_db, save_db
 
 app = FastAPI()
 coffee_db = load_db()
@@ -68,6 +68,21 @@ def remove_coffee(id: int) -> None:
         coffee = match[0]
         coffee_db.remove(coffee)
         save_db(coffee_db)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
+        )
+
+
+@app.post("/api/coffee/{coffee_id}/reviews", response_model=ReviewOutput)
+def add_review(coffee_id:int, reviews: ReviewInput) -> ReviewOutput:
+    match = [c for c in coffee_db if c.id == coffee_id]
+    if match:
+        coffee = match[0]
+        new_review = ReviewOutput(id=len(coffee.reviews) + 1, **reviews.dict())
+        coffee.reviews.append(new_review)
+        save_db(coffee_db)
+        return new_review
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"

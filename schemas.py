@@ -2,6 +2,15 @@ import json
 from pydantic import BaseModel
 
 
+class ReviewInput(BaseModel):
+    star: int
+    comment: str
+
+
+class ReviewOutput(ReviewInput):
+    id: int
+
+
 class CoffeeInput(BaseModel):
     name: str
     price: int
@@ -19,6 +28,7 @@ class CoffeeInput(BaseModel):
 
 class CoffeeOutput(CoffeeInput):
     id: int
+    reviews: list[ReviewInput] = []
 
 
 def load_db() -> list[CoffeeOutput]:
