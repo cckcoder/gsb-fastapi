@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from sqlmodel import SQLModel
 from database.db_connect import engine
 from routers import coffee
+from utils.helper_exception import NotFoundException
 
 
 app = FastAPI(title="PyCoffee")
@@ -23,6 +25,14 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
+
+
+@app.exception_handler(NotFoundException)
+async def excepition_404_handler(req: Request, exc: NotFoundException):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"message": "Not found available coffee id"},
+    )
 
 
 @app.get("/")

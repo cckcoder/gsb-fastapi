@@ -10,6 +10,7 @@ from schemas import (
     Review,
     ReviewInput,
 )
+from utils.helper_exception import NotFoundException
 
 
 router = APIRouter(prefix="/api/coffee", tags=["coffee"])
@@ -36,9 +37,7 @@ def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
     if coffee:
         return coffee
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id: {id}"
-        )
+        raise NotFoundException()
 
 
 @router.post("/api/coffee", response_model=Coffee)
@@ -63,9 +62,7 @@ def update_coffee(
         db.commit()
         return coffee
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
-        )
+        raise NotFoundException()
 
 
 @router.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -75,9 +72,7 @@ def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
         db.delete(coffee)
         db.commit()
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
-        )
+        raise NotFoundException()
 
 
 @router.post("/api/coffee/{coffee_id}/reviews", response_model=Review)
@@ -92,6 +87,4 @@ def add_review(
         db.refresh(new_review)
         return new_review
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
-        )
+        raise NotFoundException()
