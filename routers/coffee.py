@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/api/coffee")
+@router.get("/")
 def coffee_list(
     price: int | None = None,
     status: str | None = None,
@@ -34,7 +34,7 @@ def coffee_list(
     return db.exec(query).all()
 
 
-@router.get("/api/coffee/{id}", response_model=CoffeeOutput)
+@router.get("/{id}", response_model=CoffeeOutput)
 def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
     coffee = db.get(Coffee, id)
     if coffee:
@@ -43,7 +43,7 @@ def coffee_by_id(id: int, db: Session = Depends(get_session)) -> Coffee:
         raise NotFoundException()
 
 
-@router.post("/api/coffee", response_model=Coffee)
+@router.post("/", response_model=Coffee)
 def add_coffee(coffee: CoffeeInput, db: Session = Depends(get_session)) -> Coffee:
     new_coffee = Coffee.from_orm(coffee)
     db.add(new_coffee)
@@ -52,7 +52,7 @@ def add_coffee(coffee: CoffeeInput, db: Session = Depends(get_session)) -> Coffe
     return new_coffee
 
 
-@router.put("/api/coffee/{id}", response_model=Coffee)
+@router.put("/{id}", response_model=Coffee)
 def update_coffee(
     id: int, new_coffee: CoffeeInput, db: Session = Depends(get_session)
 ) -> Coffee:
@@ -70,7 +70,7 @@ def update_coffee(
         )
 
 
-@router.delete("/api/coffee/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
     coffee = db.get(Coffee, id)
     if coffee:
@@ -83,7 +83,7 @@ def remove_coffee(id: int, db: Session = Depends(get_session)) -> None:
         )
 
 
-@router.post("/api/coffee/{coffee_id}/reviews", response_model=Review)
+@router.post("/{coffee_id}/reviews", response_model=Review)
 def add_review(
     coffee_id: int, review: ReviewInput, db: Session = Depends(get_session)
 ) -> Review:
