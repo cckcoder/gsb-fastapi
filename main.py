@@ -43,3 +43,19 @@ def add_coffee(coffee: CoffeeInput) -> CoffeeOutput:
     coffee_db.append(new_coffee)
     save_db(coffee_db)
     return new_coffee
+
+
+@app.put("/api/coffee/{id}", response_model=CoffeeOutput)
+def update_coffee(id: int, new_coffee: CoffeeInput) -> CoffeeOutput:
+    match = [c for c in coffee_db if c.id == id]
+    if match:
+        coffee = match[0]
+        coffee.name = new_coffee.name
+        coffee.price = new_coffee.price
+        coffee.status = new_coffee.status
+        save_db(coffee_db)
+        return coffee
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"No coffee with id={id}"
+        )

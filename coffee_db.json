@@ -55,8 +55,8 @@
     },
     {
         "name": "Flat white",
-        "price": 39,
-        "status": "n",
+        "price": 29,
+        "status": "a",
         "id": 10
     }
 ]
