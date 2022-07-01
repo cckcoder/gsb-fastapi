@@ -15,6 +15,7 @@
 * `pip install "python-jose[cryptography]"`
 * `pip install "passlib[bcrypt]"`
 * `pip install python-decouple`
+* `pip install pytest`
 
 
 ## Ref
